@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文言生成ツール</title>
+  <style>
+    /* 基本リセット */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      /* 背景に柔らかいグラデーションを追加 */
+      background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* コンテナ */
+    .container {
+      max-width: 1700px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      animation: slideUp 0.6s ease-out;
+    }
+
+    /* 見出し */
+    h1 {
+      text-align: center;
+      font-size: 2.2em;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    h2 {
+      font-size: 1.6em;
+      border-bottom: 2px solid #cfd8dc;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+      color: #37474f;
+    }
+
+    /* ラベルと入力欄 */
+    label {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 1em;
+      color: #555;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      padding: 8px 10px;
+      margin-top: 5px;
+      border: 1px solid #b0bec5;
+      border-radius: 4px;
+      font-size: 1em;
+      transition: all 0.3s ease;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #007BFF;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+    }
+
+    /* ボタン */
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      font-size: 1.1em;
+      font-weight: bold;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    /* カテゴリー（カード風） */
+    .category {
+      background: #fafafa;
+      border-left: 5px solid #007BFF;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 20px;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .category:hover {
+      transform: translateY(-2px);
+      background: #f5f5f5;
+    }
+
+    .subcategory {
+      padding-left: 10px;
+      margin-top: 10px;
+    }
+
+    /* プレビュー */
+    .preview {
+      background: #ecf0f1;
+      border: 1px solid #dcdcdc;
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 30px;
+      font-size: 1.1em;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      color: #2c3e50;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+
+    /* hiddenクラス */
+    .hidden {
+      display: none;
+    }
+
+    /* アニメーション */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .fixed-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #449cfa;
+      z-index: 999;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .fixed-header nav {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10px 20px;
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: space-around;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .nav-links li a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s;
+      padding: 8px 12px;
+      /*  各リンクの内側余白 */
+      margin: 0 6px;
+      /*  リンク同士の間隔 */
+      border-radius: 6px;
+      /*  見た目を丸く（任意） */
+      display: inline-block;
+      /*  paddingとmarginが効くように */
+      display: inline-block;
+      border-radius: 6px;
+
+    }
+
+
+    .nav-links li a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      /* 背景をうっすら明るく */
+      color: #68ffa2;
+      /* 文字色を変更 */
+      transform: translateY(-2px);
+      /* 少し上に浮かせる */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      /* 影を付けて浮いてる感を */
+      transition: all 0.3s ease;
+      /* スムーズな動きに */
+    }
+
+
+    /* ヘッダー分だけ下に余白を設ける */
+    body {
+      padding-top: 60px;
+    }
+
+    @keyframes clickPop {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(0.9);
+        /* ちょっと縮む */
+      }
+
+      100% {
+        transform: scale(1);
+        /* 元に戻る */
+      }
+    }
+
+    .nav-links li a.clicked {
+      animation: clickPop 0.3s ease;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="fixed-header">
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#section-parking">駐車場・車両移動</a></li>
+          <li><a href="#section-work">工事時作業</a></li>
+          <li><a href="#section-electric">電気・電源</a></li>
+          <li><a href="#section-network">通信・ネットワーク</a></li>
+          <li><a href="#section-others">その他報告が必要な</a></li>
+          <li><a href="#section-output">生成文言</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <h1>文言生成ツール</h1>
+
+    <!-- 棟間集約 -->
+    <div>
+      <label>
+        棟間集約の有無:
+        <select id="buildingAggregation">
+          <option value="無">無</option>
+          <option value="有">有</option>
+        </select>
+      </label>
+    </div>
+    <div id="buildingCountDiv" class="hidden">
+      <label>
+        棟数:
+        <input type="number" id="buildingCount" min="1" value="1">
+      </label>
+    </div>
+
+    <!-- アンペア数 or 棟名+アンペア数+設計 -->
+    <div id="ampereInputs"></div>
+
+    <!-- 従来の設計プルダウン(棟間集約=無 の時のみ表示) -->
+    <div id="singleDesignDiv">
+      <label>設計:
+        <select id="designSelect">
+          <option value="宅内配管あり" selected>宅内配管あり</option>
+          <option value="ベランダ露出">ベランダ露出</option>
+          <option value="玄関露出">玄関露出</option>
+          <option value="他社都度切替">他社都度切替</option>
+          <option value="他社一斉切替">他社一斉切替</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- 駐車場・車両移動関連 -->
+    <div class="category">
+      <h2 id="section-parking">駐車場・車両移動関連</h2>
+      <div class="subcategory">
+        <label>
+          駐車者状況:
+          <select id="parkingSelect">
+            <option value="コインパーキング有り" selected>コインパーキング有り</option>
+            <option value="空きスペース有り">空きスペース有り</option>
+            <option value="駐車区画有り">駐車区画有り</option>
+            <option value="空きスペース、駐車区画無し">空きスペース、駐車区画無し</option>
+          </select>
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="車両移動が必要となります。">
+          <select class="work-type">
+            <option value="共用部">共用部</option>
+            <option value="回線">回線</option>
+            <option value="宅内">宅内</option>
+            <option value="共用部・回線">共用部・回線</option>
+            <option value="共用部・宅内">共用部・宅内</option>
+            <option value="回線・宅内">回線・宅内</option>
+            <option value="共用部・回線・宅内">共用部・回線・宅内</option>
+          </select>
+          <span class="ui-only">工事の際、車両移動が必要となります。</span>
+        </label>
+        <label>
+          <label>
+            <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="にある荷物移動が必要となります。">
+            <select class="work-type">
+              <option value="共用部">共用部</option>
+              <option value="回線">回線</option>
+              <option value="宅内">宅内</option>
+              <option value="共用部・回線">共用部・回線</option>
+              <option value="共用部・宅内">共用部・宅内</option>
+              <option value="回線・宅内">回線・宅内</option>
+              <option value="共用部・回線・宅内">共用部・回線・宅内</option>
+            </select>
+            <input type="text" class="custom-text" placeholder="移動箇所">
+            <span class="ui-only">にある荷物移動が必要となります。</span>
+          </label>
+          <label>
+            <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="にある自転車を移動させていただきます。">
+            <select class="work-type">
+              <option value="共用部">共用部</option>
+              <option value="回線">回線</option>
+              <option value="宅内">宅内</option>
+              <option value="共用部・回線">共用部・回線</option>
+              <option value="共用部・宅内">共用部・宅内</option>
+              <option value="回線・宅内">回線・宅内</option>
+              <option value="共用部・回線・宅内">共用部・回線・宅内</option>
+            </select>
+            <input type="text" class="custom-text" placeholder="移動箇所">
+            <span class="ui-only">にある自転車を移動させていただきます。</span>
+          </label>
+      </div>
+    </div>
+
+    <!-- 工事時作業関連 -->
+    <div class="category">
+      <h2 id="section-work">工事時作業関連</h2>
+      <div class="subcategory">
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="の立ち入りが必要となります。">
+          <select class="work-type">
+            <option value="共用部">共用部</option>
+            <option value="回線">回線</option>
+            <option value="宅内">宅内</option>
+            <option value="共用部・回線">共用部・回線</option>
+            <option value="共用部・宅内">共用部・宅内</option>
+            <option value="回線・宅内">回線・宅内</option>
+            <option value="共用部・回線・宅内">共用部・回線・宅内</option>
+          </select>
+          <input type="text" class="custom-text" placeholder="立ち入り箇所"><span class="ui-only">の立ち入りが必要となります。</span>
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="鍵借用・鍵解錠が必要となります。">
+          <select class="work-type">
+            <option value="共用部">共用部</option>
+            <option value="回線">回線</option>
+            <option value="宅内">宅内</option>
+            <option value="共用部・回線">共用部・回線</option>
+            <option value="共用部・宅内">共用部・宅内</option>
+            <option value="回線・宅内">回線・宅内</option>
+            <option value="共用部・回線・宅内">共用部・回線・宅内</option>
+          </select>
+          <span class="ui-only">鍵借用・鍵解錠が必要となります。</span>
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="高所作業車を使用致します。">
+          <select class="work-type">
+            <option value="共用部">共用部</option>
+            <option value="宅内">宅内</option>
+            <option value="共用部・宅内">共用部・宅内</option>
+          </select>
+          <span class="ui-only">高所作業車を使用致します。</span>
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="門扉の通過が必要となります。">
+          <select class="work-type">
+            <option value="共用部">共用部</option>
+            <option value="回線">回線</option>
+            <option value="宅内">宅内</option>
+            <option value="共用部・回線">共用部・回線</option>
+            <option value="共用部・宅内">共用部・宅内</option>
+            <option value="回線・宅内">回線・宅内</option>
+            <option value="共用部・回線・宅内">共用部・回線・宅内</option>
+          </select>
+          <span class="ui-only">工事の際、</span>
+          <span class="exclude-from-preview">門扉の通過が必要となります。</span>
+          <select class="gateStatus">
+            <option value="調査時未施錠" selected>調査時未施錠</option>
+            <option value="施錠あり">施錠あり</option>
+          </select>
+        </label>
+
+        </label>
+        <label>
+          <input type="checkbox" class="option" value="※作業時、電動工具使用するため騒音や粉塵が発生する可能性がございます。">
+          作業時、電動工具使用するため騒音や粉塵が発生する可能性がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          <input type="text" class="custom-text" placeholder="植栽がある場所">に植栽があり、作業時に枝を破損してしまう可能性がございます。(ご確認事項参照)
+        </label>
+        <label>
+          <input type="checkbox" class="option" value="※作業箇所に植栽があり、共用部工事・回線作業等に支障をきたす為、工事日までに伐採をお願いいたします。">
+          作業箇所に植栽があり、共用部工事・回線作業等に支障をきたす為、工事日までに伐採をお願いいたします。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※" data-suffix="屋根上に乗って作業する可能性がございます。">
+          <select class="work-type">
+            <option value="共用部">共用部</option>
+            <option value="回線">回線</option>
+            <option value="宅内">宅内</option>
+            <option value="共用部・回線">共用部・回線</option>
+            <option value="共用部・宅内">共用部・宅内</option>
+            <option value="回線・宅内">回線・宅内</option>
+            <option value="共用部・回線・宅内">共用部・回線・宅内</option>
+          </select>
+          屋根上に乗って作業する可能性がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※調査の際、" data-suffix="の破損を確認致しました。">
+          <span class="ui-only">調査の際、</span>
+          <input type="text" class="custom-text" placeholder="破損箇所">
+          <span class="ui-only">の破損を確認致しました。</span>
+        </label>
+
+        <label>
+          <input type="checkbox" class="option" value="※外壁タイル張りのため、作業時にタイルが割れてしまう可能性がございます。">
+          外壁タイル張りのため、作業時にタイルが割れてしまう可能性がございます。
+        </label>
+      </div>
+    </div>
+
+    <!-- 電気・電源関連 -->
+    <div class="category">
+      <h2 id="section-electric">電気・電源関連</h2>
+      <div class="subcategory">
+        <label>
+          <input type="checkbox" class="option" value="※スマートメーターの為、共用定額の可能性がございます。">
+          スマートメーターの為、共用定額の可能性がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option" value="※契約ブレーカーが確認できず、共用定額契約の可能性がございます。">
+          契約ブレーカーが確認できず、共用定額契約の可能性がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※電源取得系統に "
+            data-suffix="A のブレーカーがございます。共用部工事の際に機器と接続すると電源ブレーカーが落ちてしまう可能性が高いため、ブレーカーの交換をお願いいたします。">
+          <input type="text" class="custom-text" placeholder="A数" data-unit="A"> Aのブレーカーがございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          各棟戸建て構造の為、MDF、共用分電盤無し。共用分電盤が無いため <input type="text" class="custom-text" placeholder="電気を新設する棟">
+          棟に新規電気引込工事を行う必要がございます。分電盤の設置は別途管理会社様ご対応をお願いいたします。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          調査の際、<input type="text" class="custom-text" placeholder="確認できなかった理由">
+          のため、電気契約・使用量が確認できませんでした。工事日までにご対応をお願いいたします。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          共用部工事の際、<input type="text" class="custom-text" placeholder="停電設備名">
+          設備の電源が停止いたします。工事日前に事前周知をお願いいたします。
+        </label>
+      </div>
+    </div>
+
+    <!-- 通信・ネットワーク関連 -->
+    <div class="category">
+      <h2 id="section-network">通信・ネットワーク関連</h2>
+      <div class="subcategory">
+        <label>
+          <input type="checkbox" class="option" value="※回線工事の際に既存引込配管での通線不可の場合は、新規引込配管を敷設する場合がございます。">
+          回線工事の際に既存引込配管での通線不可の場合は、新規引込配管を敷設する場合がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option" value="※回線工事の際、地下ピット経由にて配線をする必要があるため、回線事業者様の現地調査が必要になる場合がございます。">
+          回線工事の際、地下ピット経由にて配線をする必要があるため、回線事業者様の現地調査が必要になる場合がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          調査の際、<input type="text" class="custom-text" placeholder="通線不可理由">
+          のため、通線確認不可でした。
+        </label>
+        <label>
+          <input type="checkbox" class="option" value="※一部配線ルートで露出配線が少なくなる可能性がございます。">
+          一部配線ルートで露出配線が少なくなる可能性がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          <input type="text" class="custom-text" placeholder="棟名">
+          棟～<input type="text" class="custom-text" placeholder="棟名">
+          棟間の架空配線が15ｍ以上あるため、ご確認をお願い致します。(約
+          <input type="text" class="custom-text" placeholder="棟間の距離">m)
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          <input type="text" class="custom-text" placeholder="棟名">
+          棟～<input type="text" class="custom-text" placeholder="棟名">
+          棟間の架空配線が15ｍ以上の正面受けとなるため、ご確認をお願い致します。(約
+          <input type="text" class="custom-text" placeholder="棟間の距離">m)
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          <input type="text" class="custom-text" placeholder="棟名">
+          棟～<input type="text" class="custom-text" placeholder="棟名">
+          棟間の架空配線が20ｍ以上あるため、ご確認をお願い致します。(約
+          <input type="text" class="custom-text" placeholder="棟間の距離">m)
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          <input type="text" class="custom-text" placeholder="該当の貫通位置">
+          貫通位置が所定の位置より高さがあるため、モール配線が発生する可能性がございます。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          <input type="text" class="custom-text" placeholder="図面が必要な理由">
+          のため、念の為平面図・弱電系統図等のご確認をお願い致します。
+        </label>
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          <input type="text" class="custom-text" placeholder="機器を移動する盤">
+          盤内のTV･電話･光設備を移動して機器設置を行います。
+        </label>
+      </div>
+    </div>
+
+    <!-- その他報告が必要な事項 -->
+    <div class="category">
+      <h2 id="section-others">その他報告が必要な事項</h2>
+      <div class="subcategory">
+        <label>
+          <input type="checkbox" class="option custom-option" data-prefix="※">
+          導入依頼数と現地の世帯数で相違がございます。導入世帯のご確認をお願いいたします。(導入依頼:
+          <input type="text" class="custom-text" placeholder="SF側の戸数">戸 ⇒ 現地:
+          <input type="text" class="custom-text" placeholder="現地の戸数">戸)
+        </label>
+        <label>
+          <input type="checkbox" class="option" value="※物件銘板及び棟の表示が無く対象物件の確認が取れないため、ご確認をお願い致します。">
+          物件銘板及び棟の表示が無く対象物件の確認が取れないため、ご確認をお願い致します。
+        </label>
+      </div>
+    </div>
+
+    <h2 id="section-output">生成された文言:</h2>
+    <div id="preview" class="preview"></div>
+
+    <button onclick="copyToClipboard()">コピー</button>
+  </div>
+
+  <script>
+    const buildingAggregation = document.getElementById('buildingAggregation');
+    const buildingCountDiv = document.getElementById('buildingCountDiv');
+    const buildingCount = document.getElementById('buildingCount');
+    const ampereInputs = document.getElementById('ampereInputs');
+    const singleDesignDiv = document.getElementById('singleDesignDiv');
+    const designSelect = document.getElementById('designSelect');
+    const parkingSelect = document.getElementById('parkingSelect');
+    const preview = document.getElementById('preview');
+
+    // 駐車者状況に応じた出力文言
+    const parkingMap = {
+      'コインパーキング有り': '',
+      '空きスペース有り': '※物件周辺にコインパーキングが無いため、物件敷地内に駐車させていただきます。',
+      '駐車区画有り': '※周辺にコインパーキング・駐車スペース等がないため、物件専有区画に駐車可能かご確認をお願い致します。',
+      '空きスペース、駐車区画無し': '※周辺にコインパーキング・駐車スペース･専有区画駐車場等無しのため、ご確認をお願い致します。'
+    };
+
+    // ✅【修正】ラベル全体のテキストを取得し、要素を置き換えて反映
+    function getLabelOutput(chk) {
+      const prefix = chk.dataset.prefix ? chk.dataset.prefix.replace(/^※+/, '※') : '※';
+      const suffix = chk.dataset.suffix || '';
+
+      // 1. チェックボックスの親ラベルをクローン
+      const clone = chk.parentElement.cloneNode(true);
+
+      // 2. チェックボックスを削除
+      const checkbox = clone.querySelector('input[type="checkbox"]');
+      if (checkbox) checkbox.remove();
+
+      // 3. UI用の不要な文言（.ui-only, .exclude-from-preview）を削除
+      clone.querySelectorAll('.ui-only, .exclude-from-preview').forEach(el => el.remove());
+
+      // 4. work-type セレクトを span に置換
+      chk.closest('label').querySelectorAll('select.work-type').forEach(originalSel => {
+  const value = originalSel.value;
+    clone.querySelectorAll('select.work-type').forEach(sel => {
+      const span = document.createElement('span');
+      span.textContent = value + '工事の際、';
+      sel.replaceWith(span);
+    });
+  });
+
+
+    // 5. gateStatus セレクトの値を「元のDOM」から取得して使用
+    let gateStatusText = "";
+    chk.closest('label').querySelectorAll('select.gateStatus').forEach(sel => {
+      gateStatusText += "（" + sel.value + "）";
+    });
+
+    // クローン内の gateStatus は削除する（表示には使わない）
+    clone.querySelectorAll('select.gateStatus').forEach(sel => sel.remove());
+ 
+
+      // 6. custom-text の値を span に置換
+      clone.querySelectorAll('input.custom-text').forEach(input => {
+        const val = input.value.trim() || input.placeholder;
+        const span = document.createElement('span');
+        span.textContent = val;
+        input.replaceWith(span);
+      });
+
+      // 7. clone のテキストを取得し、余分な空白を整形
+      const text = clone.textContent.replace(/\s+/g, '').trim();
+
+
+      // 8. プレフィックス + テキスト + サフィックス + gateStatusText をスペース無しで連結
+      return [prefix, text, suffix, gateStatusText].filter(Boolean).join('');
+    }
+
+
+
+    function updateAmpereInputs() {
+      ampereInputs.innerHTML = '';
+
+      if (buildingAggregation.value === '無') {
+        // 単一の場合：アンペア数入力と従来の設計プルダウン表示
+        singleDesignDiv.classList.remove('hidden');
+        buildingCountDiv.classList.add('hidden');
+
+        const label = document.createElement('label');
+        label.innerHTML = `アンペア数:<br>
+                <input type='number' class='ampSingleInput' placeholder='例:20'>`;
+        ampereInputs.appendChild(label);
+      } else {
+        // 複数棟の場合：棟名、アンペア数、設計を入力
+        singleDesignDiv.classList.add('hidden');
+        buildingCountDiv.classList.remove('hidden');
+
+        const count = Number(buildingCount.value);
+        for (let i = 0; i < count; i++) {
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'building-row';
+          rowDiv.innerHTML = `
+                    <div class="input-group">
+                      <label>棟名${i + 1}:</label>
+                      <input type='text' class='buildingNameInput' placeholder='例: A'>棟
+                    </div>
+                    <div class="input-group">
+                      <label>アンペア数:</label>
+                      <input type='number' class='ampMultInput' placeholder='例:20'>
+                    </div>
+                    <div class="input-group">
+                      <label>設計:</label>
+                      <select class='designMultiSelect'>
+                          <option value='宅内配管あり' selected>宅内配管あり</option>
+                          <option value='ベランダ露出'>ベランダ露出</option>
+                          <option value='玄関露出'>玄関露出</option>
+                          <option value='他社都度切替'>他社都度切替</option>
+                          <option value='他社一斉切替'>他社一斉切替</option>
+                      </select>
+                    </div>`;
+          ampereInputs.appendChild(rowDiv);
+        }
+      }
+      updatePreview();
+    }
+
+    function updatePreview() {
+      let ampereText = '';
+
+      if (buildingAggregation.value === '無') {
+        // 単一の場合
+        const ampSingle = document.querySelector('.ampSingleInput');
+        const singleDesignVal = designSelect.value;
+
+        // アンペア数が "0" の場合は何も出力しない
+        if (ampSingle && ampSingle.value !== '0') {
+          ampereText = `${ampSingle.value}A`;
+        }
+
+        // すでにアンペア数があれば、設計が "宅内配管あり" でなければ連結
+        if (ampereText) {
+          if (singleDesignVal !== '宅内配管あり') {
+            ampereText += `　${singleDesignVal}`;
+          }
+        } else {
+          // アンペア数が 0 または未入力の場合、設計が "宅内配管あり" なら何も出力せず、
+          // "宅内配管あり" 以外なら設計のみを出力
+          if (singleDesignVal !== '宅内配管あり') {
+            ampereText = singleDesignVal;
+          }
+        }
+      } else {
+        // 複数棟の場合
+        const count = Number(buildingCount.value);
+        let pairs = [];
+
+        for (let i = 0; i < count; i++) {
+          const bNameInput = ampereInputs.querySelectorAll('.buildingNameInput')[i];
+          const ampInput = ampereInputs.querySelectorAll('.ampMultInput')[i];
+          const designSel = ampereInputs.querySelectorAll('.designMultiSelect')[i];
+
+          const bNameVal = bNameInput?.value.trim() || '';
+          const ampVal = ampInput?.value.trim() || '';
+          const designVal = designSel?.value || '';
+
+          // アンペア数が "0" かつ設計が "宅内配管あり" ならその棟は出力しない
+          if (ampVal === '0' && designVal === '宅内配管あり') {
+            continue;
+          }
+
+          let combined = '';
+
+          if (ampVal !== '0' && ampVal) {
+            combined = `${bNameVal}棟 ${ampVal}A`;
+          }
+
+          if (designVal !== '宅内配管あり') {
+            if (combined) {
+              combined += ` ${designVal}`;
+            } else {
+              combined = `${bNameVal}棟 ${designVal}`.trim();
+            }
+          }
+
+          if (combined.trim()) {
+            pairs.push(combined.trim());
+          }
+        }
+
+        if (pairs.length > 0) {
+          ampereText = pairs.join('　');
+        }
+      }
+
+      // 駐車者状況の取得
+      const parkingVal = parkingSelect.value;
+      const parkingText = parkingMap[parkingVal] || '';
+
+      let lines = [];
+      if (ampereText) {
+        lines.push(ampereText);
+      }
+      if (parkingText) {
+        lines.push(parkingText);
+      }
+
+      // チェックボックスの出力
+      const selectedCheckboxes = Array.from(document.querySelectorAll('.option')).filter(chk => chk.checked);
+      const cbLines = selectedCheckboxes.map(chk => {
+        if (chk.classList.contains('custom-option')) {
+          // ラベル全体から文言を生成
+          return getLabelOutput(chk);
+        } else {
+          // 通常のcheckboxは value をそのまま（※を重複しないよう整形）
+          return `※${chk.value.replace(/^※+/g, '').trim()}`;
+        }
+      });
+
+      lines.push(...cbLines);
+
+      // 改行や空白を整形してプレビューに表示
+      const finalText = lines
+        .filter(line => line.trim() !== "")
+        .join('\n')
+        .replace(/\n{2,}/g, '\n');
+
+      preview.textContent = finalText;
+
+      // プレビュー再表示時のフェードイン
+      preview.style.animation = 'none';
+      void preview.offsetWidth; // Reflow
+      preview.style.animation = 'fadeIn 0.5s forwards';
+    }
+
+    function copyToClipboard() {
+      navigator.clipboard.writeText(preview.textContent)
+        .then(() => alert('コピーしました！'))
+        .catch(() => alert('コピーに失敗しました。'));
+    }
+
+    // イベント設定
+    buildingAggregation.addEventListener('change', updateAmpereInputs);
+    buildingCount.addEventListener('input', updateAmpereInputs);
+
+    document.addEventListener('input', (e) => {
+      if (
+        e.target.matches('.ampSingleInput') ||
+        e.target.matches('.buildingNameInput') ||
+        e.target.matches('.ampMultInput') ||
+        e.target.matches('.designMultiSelect') ||
+        e.target.matches('#designSelect')
+      ) {
+        updatePreview();
+      }
+    });
+
+    parkingSelect.addEventListener('change', updatePreview);
+    document.querySelectorAll('.option').forEach(chk => chk.addEventListener('change', updatePreview));
+    document.querySelectorAll('.work-type, .custom-text, .gateStatus').forEach(el => el.addEventListener('input', updatePreview));
+
+    // 初期化
+    updateAmpereInputs();
+    updatePreview();
+
+    // スムーズスクロール（クリック時に滑らかに移動）
+    document.querySelectorAll('.nav-links a').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        target?.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+    // ナビリンククリック時にポンっと弾むアニメーション
+    document.querySelectorAll('.nav-links li a').forEach(link => {
+      link.addEventListener('click', () => {
+        link.classList.add('clicked');
+        setTimeout(() => {
+          link.classList.remove('clicked');
+        }, 300); // アニメーション終了後に戻す
+      });
+    });
+
+  </script>
+</body>
+
+</html>
